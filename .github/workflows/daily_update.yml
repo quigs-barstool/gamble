@@ -28,10 +28,10 @@ jobs:
       - name: Run Player Props Model
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-        run: python scripts/player_props.py
+        run: python scripts/KOTCv3.py
 
       - name: Run First Basket Model
-        run: python scripts/first_basket.py
+        run: python scripts/FirstBasketUpdatedV11x.py
 
       - name: Commit and push changes
         run: |
