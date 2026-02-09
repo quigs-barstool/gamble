@@ -1,0 +1,5 @@
+pandas
+requests
+nba_api
+openpyxl
+lxml
