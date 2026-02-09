@@ -2,35 +2,47 @@ name: Daily Model Update
 
 on:
   schedule:
-    # Runs at 13:00 UTC (8:00 AM EST) every day
+    # 13:00 UTC daily (08:00 AM US/Eastern during standard time)
     - cron: '0 13 * * *'
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: daily-model-update
+  cancel-in-progress: true
+
 jobs:
   run-models:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
 
       - name: Install dependencies
         run: |
-          pip install -r scripts/requirements.txt
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run Player Props Model
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          PYTHONUNBUFFERED: '1'
         run: python scripts/KOTCv3.py
 
       - name: Run First Basket Model
+        env:
+          PYTHONUNBUFFERED: '1'
         run: python scripts/FirstBasketUpdatedV11x.py
 
       - name: Commit and push changes
@@ -38,5 +50,5 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add public/data/
-          git commit -m "Update model data $(date)" || echo "No changes to commit"
+          git commit -m "Update model data $(date -u '+%Y-%m-%d %H:%M UTC')" || echo "No changes to commit"
           git push
