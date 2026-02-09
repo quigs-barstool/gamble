@@ -1,0 +1,8 @@
+pandas>=2.2,<3
+requests>=2.31,<3
+openpyxl>=3.1,<4
+lxml>=5.1,<6
+
+# Note:
+# These scripts call stats.nba.com directly (not via nba_api) so we can control
+# headers, retries, and timeouts in GitHub Actions.
