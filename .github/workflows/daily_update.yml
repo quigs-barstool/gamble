@@ -1,0 +1,42 @@
+name: Daily Model Update
+
+on:
+  schedule:
+    # Runs at 13:00 UTC (8:00 AM EST) every day
+    - cron: '0 13 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  run-models:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r scripts/requirements.txt
+
+      - name: Run Player Props Model
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python scripts/player_props.py
+
+      - name: Run First Basket Model
+        run: python scripts/first_basket.py
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add public/data/
+          git commit -m "Update model data $(date)" || echo "No changes to commit"
+          git push
